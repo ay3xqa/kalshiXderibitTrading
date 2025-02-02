@@ -2,6 +2,7 @@
 # https://github.com/sendgrid/sendgrid-python
 import os
 from sendgrid import SendGridAPIClient
+import certifi
 from sendgrid.helpers.mail import Mail
 
 def send_email(html_content):
@@ -26,6 +27,7 @@ def send_email(html_content):
     
     try:
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.clients.ca_certs=certifi.where()
         response = sg.send(message)
         return {
             'status_code': response.status_code,

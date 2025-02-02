@@ -95,6 +95,7 @@ ETH_day_strike_mark_data.json
 ETH_year_strike_mark_data.json
 kalshi_all_btc_markets_data.json
 kalshi-hourly-data.csv
+kalshi-hourly-data-generic.csv
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
