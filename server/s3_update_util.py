@@ -76,7 +76,7 @@ def load_json_data(file_path):
         data = json.load(f)
     return json.dumps(data["data"])  # Convert the "data" list to a JSON string
 
-def update_local_csv_generic(timestamp, currency, event_type, contract_type, strike_price, pdf_estimate, current_kalshi):
+def update_local_csv(timestamp, currency, event_type, contract_type, strike_price, pdf_estimate, current_kalshi):
     deribit_stats_json = load_json_data("BTC_day_strike_mark_data.json")  # Load and serialize JSON
     row_generic = [timestamp, currency, event_type, contract_type, strike_price, deribit_stats_json, current_kalshi]
     row = [timestamp, currency, event_type, contract_type, strike_price, pdf_estimate, current_kalshi]
