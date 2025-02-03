@@ -31,7 +31,7 @@ def download_file_from_s3():
         print(f"Downloaded {S3_FILE_NAME} from {BUCKET_NAME} to {local_file}")
 
         local_file_generic = "kalshi-historical-generic.csv"  
-        s3.download_file(BUCKET_NAME, S3_FILE_NAME_GENERIC, local_file)
+        s3.download_file(BUCKET_NAME, S3_FILE_NAME_GENERIC, local_file_generic)
         print(f"Downloaded {S3_FILE_NAME_GENERIC} from {BUCKET_NAME} to {local_file_generic}")
     except Exception as e:
         print(f"Error downloading file: {e}")
