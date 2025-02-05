@@ -92,8 +92,13 @@ def get_all_strike_mark_data_threading():
         #     # Use today's date
         #     day_exp_date = now.strftime("%d%b%y").upper()
 
-        
-        day_exp_date = (datetime.now() + timedelta(days=1)).strftime("%-d%b%y").upper()
+        # TODO: toggle the day_exp_date manually based on operating systems. One didn't work for me
+        # mac version:
+        # day_exp_date = (datetime.now() + timedelta(days=1)).strftime("%-d%b%y").upper()
+        # windows apparently needs the lstrip('0')
+        # here's the windows version:
+        day_exp_date = (datetime.now() + timedelta(days=1)).strftime("%d%b%y").upper().lstrip('0')
+
         print(day_exp_date)
         year_exp_date = "26DEC25"
 
@@ -121,5 +126,5 @@ def get_all_strike_mark_data_threading():
                     print("Error during execution: ", str(e))
         print("Updated strike mark data")
     except Exception as e:
-        print("Error: ", str(e))
+        print("Error (deribitAPIUtil.py): ", str(e))
     

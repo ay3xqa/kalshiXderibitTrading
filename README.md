@@ -19,7 +19,7 @@ Note: use pip3 or python3 in place of pip and python if neccessary
 
 ## Running the Model and Dashboard locally
 
-Open up two terminals - one for the server and one for the client b       v
+Open up two terminals - one for the server and one for the client
 
 #### Client Terminal
 
