@@ -6,6 +6,7 @@ from apscheduler.triggers.cron import CronTrigger
 from univariateSplineAnalyzer import UnivariateSplineAnalyzer
 from flask_cors import CORS
 from s3_update_util import merge_and_upload_to_s3
+from sendGrid import send_email
 import os
 import json
 
@@ -36,6 +37,9 @@ def initialize_data():
 
     # Fetch initial Kalshi data after analyzers are ready
     fetch_and_save_kalshi_data()
+
+    # sendgrid email test
+    send_email("The Arbitrager_9000 is up and running")
 
 
 def fetch_and_save_kalshi_data():

@@ -1,6 +1,7 @@
 # using SendGrid's Python Library
 # https://github.com/sendgrid/sendgrid-python
 import os
+import certifi
 from sendgrid import SendGridAPIClient
 import certifi
 from sendgrid.helpers.mail import Mail
@@ -15,8 +16,8 @@ def send_email(html_content):
     Returns:
         dict: Response containing status_code, body, and headers
     """
-    from_email = "isaacjhuntsman@gmail.com"  # Replace with your sender email
-    to_emails = ["u1180745@utah.edu", "alexlyu5.ay@gmail.com"]  # List of recipient emails
+    from_email = "isaacjhuntsman@gmail.com"  
+    to_emails = ["u1180745@utah.edu", "alexlyu5.ay@gmail.com"]
     subject = "Trade Alert"
     
     message = Mail(
@@ -27,8 +28,10 @@ def send_email(html_content):
     
     try:
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        sg.clients.ca_certs=certifi.where()
-        response = sg.send(message)
+        # Set the SSL certificate path
+        sg.client.ca_certs = certifi.where()
+        response = sg.client.mail.send.post(request_body=message.get())
+        print("response.status_code: ", response.status_code)
         return {
             'status_code': response.status_code,
             'body': response.body,

@@ -86,13 +86,14 @@ def get_kalshi_max_day_json(currency, SMA):
                 price_diff_threshold = 10
                 floor_price = 50
 
-                if mkt["no_prob"] > mkt["no_price"] + price_diff_threshold and mkt["no_price"] > floor_price:
+                # for now blocking ETH notifications (TODO: fix)
+                if mkt["no_prob"] > mkt["no_price"] + price_diff_threshold and mkt["no_price"] > floor_price and currency == "BTC":
                     opportunities.append(
                         f"Price difference detected for {currency} at ${mkt['target_price']}:\n"
                         f"NO Market Price: {mkt['no_price']}% vs Model Probability: {mkt['no_prob']}%"
                     )
 
-                if mkt["yes_prob"] > mkt["yes_price"] + price_diff_threshold and mkt["yes_price"] > floor_price:
+                if mkt["yes_prob"] > mkt["yes_price"] + price_diff_threshold and mkt["yes_price"] > floor_price and currency == "BTC":
                     opportunities.append(
                         f"Price difference detected for {currency} at ${mkt['target_price']}:\n"
                         f"YES Market Price: {mkt['yes_price']}% vs Model Probability: {mkt['yes_prob']}%"
@@ -108,7 +109,7 @@ def get_kalshi_max_day_json(currency, SMA):
         # Send email if opportunities are found
         if opportunities:
             from sendGrid import send_email
-            html_content = "<h2>Trading Opportunities Detected</h2>"
+            html_content = "<h2>Trading OpportunitY Detected:</h2>"
             html_content += "<br>".join([f"<p>{opp}</p>" for opp in opportunities])
             try:
                 send_email(html_content)
