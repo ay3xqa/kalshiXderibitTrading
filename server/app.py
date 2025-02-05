@@ -39,7 +39,7 @@ def initialize_data():
     fetch_and_save_kalshi_data()
 
     # sendgrid email test
-    # send_email("Hello, World!")
+    send_email("The Arbitrager_9000 is up and running")
 
 
 def fetch_and_save_kalshi_data():

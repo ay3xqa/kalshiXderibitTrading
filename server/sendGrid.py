@@ -15,8 +15,8 @@ def send_email(html_content):
     Returns:
         dict: Response containing status_code, body, and headers
     """
-    from_email = "isaacjhuntsman@gmail.com"  # Replace with your sender email
-    to_emails = ["u1180745@utah.edu", "alexlyu5.ay@gmail.com"]  # List of recipient emails
+    from_email = "isaacjhuntsman@gmail.com"  
+    to_emails = ["u1180745@utah.edu", "alexlyu5.ay@gmail.com"]
     subject = "Trade Alert"
     
     message = Mail(
