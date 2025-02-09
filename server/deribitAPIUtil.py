@@ -108,6 +108,8 @@ def get_all_strike_mark_data_threading():
             with open(filename, 'w') as f:
                 json.dump({"data": data}, f, indent=4)
 
+                print("process_data called...")
+
         # Create tasks for the executor
         with ThreadPoolExecutor(max_workers=2) as executor:
             # Dispatch parallel tasks for each currency and expiration date

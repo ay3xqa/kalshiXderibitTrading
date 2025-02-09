@@ -9,31 +9,58 @@ from s3_update_util import merge_and_upload_to_s3
 from sendGrid import send_email
 import os
 import json
+import time
+from threading import Lock
 
 app = Flask(__name__)
 CORS(app)
 
 # Global variables for analyzers
 btc_day_analyzer = None
-eth_day_analyzer = None
+# eth_day_analyzer = None
 btc_year_analyzer = None
-eth_year_analyzer = None
+# eth_year_analyzer = None
 
+class RateLimiter:
+    def __init__(self, rate, burst):
+        self.rate = rate  # tokens per second
+        self.burst = burst  # maximum burst size
+        self.tokens = burst
+        self.last_check = time.time()
+        self.lock = Lock()
+
+    def acquire(self):
+        with self.lock:
+            current_time = time.time()
+            elapsed = current_time - self.last_check
+            self.last_check = current_time
+            self.tokens += elapsed * self.rate
+            if self.tokens > self.burst:
+                self.tokens = self.burst
+
+            if self.tokens >= 1:
+                self.tokens -= 1
+                return True
+            return False
+
+# 5, 20, from deribit documentation: https://www.deribit.com/kb/deribit-rate-limits
+rate_limiter = RateLimiter(rate=5, burst=20) 
 
 def initialize_data():
     """
     Initializes the strike mark data and analyzers required for further processing.
     """
-    global btc_day_analyzer, eth_day_analyzer, btc_year_analyzer, eth_year_analyzer
+    global btc_day_analyzer, btc_year_analyzer
+    # removed from global: eth_day_analyzer, eth_year_analyzer
 
     # Fetch initial strike mark data
     get_all_strike_mark_data_threading()
 
     # Instantiate analyzers
     btc_day_analyzer = UnivariateSplineAnalyzer("BTC", "day")
-    eth_day_analyzer = UnivariateSplineAnalyzer("ETH", "day")
+    # eth_day_analyzer = UnivariateSplineAnalyzer("ETH", "day")
     btc_year_analyzer = UnivariateSplineAnalyzer("BTC", "year")
-    eth_year_analyzer = UnivariateSplineAnalyzer("ETH", "year")
+    # eth_year_analyzer = UnivariateSplineAnalyzer("ETH", "year")
 
     # Fetch initial Kalshi data after analyzers are ready
     fetch_and_save_kalshi_data()
@@ -48,11 +75,17 @@ def fetch_and_save_kalshi_data():
     """
     try:
         # Fetch data using the initialized analyzers
-        btc_max_year = get_kalshi_max_year_json("BTC", btc_year_analyzer)
+        if rate_limiter.acquire():
+            btc_max_day = get_kalshi_max_day_json("BTC", btc_day_analyzer)
+        else:
+            print("Rate limit exceeded, skipping BTC max day fetch")
+            btc_max_day = None
+
+        # eth_max_day = get_kalshi_max_day_json("ETH", eth_day_analyzer)
+        # eth_max_year = get_kalshi_max_year_json("ETH", eth_year_analyzer)
         btc_max_day = get_kalshi_max_day_json("BTC", btc_day_analyzer)
-        eth_max_year = get_kalshi_max_year_json("ETH", eth_year_analyzer)
-        eth_max_day = get_kalshi_max_day_json("ETH", eth_day_analyzer)
-        results = [btc_max_day, eth_max_day, btc_max_year, eth_max_year]
+        btc_max_year = get_kalshi_max_year_json("BTC", btc_year_analyzer)
+        results = [btc_max_day, btc_max_year]
 
         # Save results to a JSON file
         if results:
@@ -61,9 +94,9 @@ def fetch_and_save_kalshi_data():
 
             # Refresh analyzer data
             btc_day_analyzer.refresh_data()
-            eth_day_analyzer.refresh_data()
+            # eth_day_analyzer.refresh_data()
             btc_year_analyzer.refresh_data()
-            eth_year_analyzer.refresh_data()
+            # eth_year_analyzer.refresh_data()
         else:
             print("No results found.")
         print("Updated Kalshi fetch")
