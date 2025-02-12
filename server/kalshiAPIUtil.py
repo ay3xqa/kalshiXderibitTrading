@@ -30,6 +30,8 @@ def get_kalshi_max_year_json(currency, SMA):
                 mkt["target_price"] = int(target_price)
                 mkt["no_price"] = market["no_ask"]
                 mkt["no_prob"] = SMA.integrate_pdf(mkt["target_price"])
+                # print here for pdf sanity check
+                # print("mkt['no_prob']: ", mkt["no_prob"])
                 mkt["yes_price"] = market["yes_ask"]
                 mkt["yes_prob"] = 100-mkt["no_prob"]
                 market_data.append(mkt)
@@ -77,8 +79,11 @@ def get_kalshi_max_day_json(currency, SMA):
                 mkt["target_price"] = int(market["floor_strike"]+0.01)
                 mkt["no_price"] = market["no_ask"]
                 mkt["no_prob"] = SMA.integrate_pdf(mkt["target_price"])
+                # print here for pdf sanity check
+                # print("For target price: ", mkt["target_price"], "no prob - price: ", mkt["no_prob"] - mkt["no_price"]);
                 mkt["yes_price"] = market["yes_ask"]
                 mkt["yes_prob"] = 100-mkt["no_prob"]
+                # print("For target price: ", mkt["target_price"], "yes prob - price: ", mkt["yes_prob"] - mkt["yes_price"]);
 
 
                 # entry condition:
@@ -112,7 +117,6 @@ def get_kalshi_max_day_json(currency, SMA):
             html_content += "<br>".join([f"<p>{opp}</p>" for opp in opportunities])
             try:
                 send_email(html_content)
-                print("Alert email sent successfully")
             except Exception as e:
                 print(f"Failed to send alert email: {str(e)}")
                 

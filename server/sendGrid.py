@@ -31,7 +31,7 @@ def send_email(html_content):
         # Set the SSL certificate path
         sg.client.ca_certs = certifi.where()
         response = sg.client.mail.send.post(request_body=message.get())
-        print("response.status_code: ", response.status_code)
+        print("email sent. code: ", response.status_code)
         return {
             'status_code': response.status_code,
             'body': response.body,
