@@ -1,5 +1,6 @@
 from kalshiAuth import retrieve_auth_header
 from s3_update_util import update_local_csv
+from trade_execution import check_and_execute_trade
 import requests
 import datetime
 
@@ -95,12 +96,24 @@ def get_kalshi_max_day_json(currency, SMA):
                         f"Price difference detected for {currency} at ${mkt['target_price']}:\n"
                         f"NO Market Price: {mkt['no_price']}% vs Model Probability: {mkt['no_prob']}%"
                     )
+                    trade = {'event_ticker': mkt["event_ticker"], 
+                            'trade_type': 'no', 
+                            'price': mkt['no_price'], 
+                            'limit_price': mkt['no_prob'], 
+                            'difference': mkt["no_prob"]-mkt["no_price"]}
+                    check_and_execute_trade(trade)
 
                 if mkt["yes_prob"] > mkt["yes_price"] + price_diff_threshold and mkt["yes_price"] > floor_price and currency == "BTC":
                     opportunities.append(
                         f"Price difference detected for {currency} at ${mkt['target_price']}:\n"
                         f"YES Market Price: {mkt['yes_price']}% vs Model Probability: {mkt['yes_prob']}%"
                     )
+                    trade = {'event_ticker': mkt["event_ticker"], 
+                            'trade_type': 'yes', 
+                            'price': mkt['yes_price'], 
+                            'limit_price': mkt['yes_prob'], 
+                            'difference': mkt["yes_prob"]-mkt["yes_price"]}
+                    check_and_execute_trade(trade)
 
                 if currency == "BTC":
                     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -130,3 +143,4 @@ def get_kalshi_max_day_json(currency, SMA):
         print("Error: ", response.status_code, response.text)
         return {}
 
+# add dummy line
