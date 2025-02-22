@@ -112,10 +112,8 @@ def get_all_strike_mark_data_threading():
         with ThreadPoolExecutor(max_workers=2) as executor:
             # Dispatch parallel tasks for each currency and expiration date
             futures = [
-                executor.submit(process_data, day_exp_date, "BTC", 'BTC_day_strike_mark_data.json'),
-                executor.submit(process_data, day_exp_date, "ETH", 'ETH_day_strike_mark_data.json'),
-                executor.submit(process_data, year_exp_date, "BTC", 'BTC_year_strike_mark_data.json'),
-                executor.submit(process_data, year_exp_date, "ETH", 'ETH_year_strike_mark_data.json')
+                executor.submit(process_data, day_exp_date, "BTC", 'data/BTC_day_strike_mark_data.json'),
+                executor.submit(process_data, year_exp_date, "BTC", 'data/BTC_year_strike_mark_data.json'),
             ]
 
             # Ensure all futures complete and capture potential exceptions
