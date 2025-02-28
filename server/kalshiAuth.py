@@ -46,10 +46,7 @@ def retrieve_auth_header(path, method_type):
     # Load the RSA private key
     private_key = load_private_key_from_file('kalshi_key.key')
 
-    method = "GET"
-    path = '/trade-api/v2/markets'
-
-    msg_string = timestampt_str + method + path
+    msg_string = timestampt_str + method_type + path
 
     sig = sign_pss_text(private_key, msg_string)
     headers = {
