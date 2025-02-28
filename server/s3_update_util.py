@@ -77,14 +77,23 @@ def load_json_data(file_path):
     return json.dumps(data["data"])  # Convert the "data" list to a JSON string
 
 def update_local_csv(timestamp, currency, event_type, contract_type, strike_price, pdf_estimate, current_kalshi):
-    deribit_stats_json = load_json_data("BTC_day_strike_mark_data.json")  # Load and serialize JSON
+    deribit_stats_json = load_json_data("data/BTC_day_strike_mark_data.json")  # Load and serialize JSON
     row_generic = [timestamp, currency, event_type, contract_type, strike_price, deribit_stats_json, current_kalshi]
     row = [timestamp, currency, event_type, contract_type, strike_price, pdf_estimate, current_kalshi]
+ 
     with open(LOCAL_FILE_NAME_GENERIC, mode='a', newline='') as file:
+
         writer = csv.writer(file)
-        writer.writerow(row_generic)     
-        print(f"Row generic appended successfully at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        try:
+            writer.writerow(row_generic)
+
+        except Exception as e:
+            print(f"Error appending row generic: {e}")
+
     with open(LOCAL_FILE_NAME, mode='a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(row)     
-        print(f"Row appended successfully at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        try:
+            writer.writerow(row)     
+        except Exception as e:
+            print(f"Error appending row: {e}")
+

@@ -9,37 +9,33 @@ from s3_update_util import merge_and_upload_to_s3
 from sendGrid import send_email
 import os
 import json
+import time
+from threading import Lock
 
 app = Flask(__name__)
 CORS(app)
 
 # Global variables for analyzers
 btc_day_analyzer = None
-eth_day_analyzer = None
-btc_year_analyzer = None
-eth_year_analyzer = None
-
+btc_year_analyzer = None 
 
 def initialize_data():
     """
     Initializes the strike mark data and analyzers required for further processing.
     """
-    global btc_day_analyzer, eth_day_analyzer, btc_year_analyzer, eth_year_analyzer
+    global btc_day_analyzer, btc_year_analyzer
 
     # Fetch initial strike mark data
     get_all_strike_mark_data_threading()
 
     # Instantiate analyzers
     btc_day_analyzer = UnivariateSplineAnalyzer("BTC", "day")
-    eth_day_analyzer = UnivariateSplineAnalyzer("ETH", "day")
     btc_year_analyzer = UnivariateSplineAnalyzer("BTC", "year")
-    eth_year_analyzer = UnivariateSplineAnalyzer("ETH", "year")
 
     # Fetch initial Kalshi data after analyzers are ready
     fetch_and_save_kalshi_data()
 
-    # sendgrid email test
-    send_email("The Arbitrager_9000 is up and running")
+    # send_email("The Arbitrager_9000 is up and running")
 
 
 def fetch_and_save_kalshi_data():
@@ -48,11 +44,9 @@ def fetch_and_save_kalshi_data():
     """
     try:
         # Fetch data using the initialized analyzers
-        btc_max_year = get_kalshi_max_year_json("BTC", btc_year_analyzer)
         btc_max_day = get_kalshi_max_day_json("BTC", btc_day_analyzer)
-        eth_max_year = get_kalshi_max_year_json("ETH", eth_year_analyzer)
-        eth_max_day = get_kalshi_max_day_json("ETH", eth_day_analyzer)
-        results = [btc_max_day, eth_max_day, btc_max_year, eth_max_year]
+        btc_max_year = get_kalshi_max_year_json("BTC", btc_year_analyzer)
+        results = [btc_max_day, btc_max_year]
 
         # Save results to a JSON file
         if results:
@@ -61,9 +55,7 @@ def fetch_and_save_kalshi_data():
 
             # Refresh analyzer data
             btc_day_analyzer.refresh_data()
-            eth_day_analyzer.refresh_data()
             btc_year_analyzer.refresh_data()
-            eth_year_analyzer.refresh_data()
         else:
             print("No results found.")
         print("Updated Kalshi fetch")

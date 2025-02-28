@@ -67,6 +67,9 @@ def get_kalshi_max_day_json(currency, SMA):
             
         # Track opportunities for email alert
         opportunities = []
+
+        #for logging
+        rowsAppended = 0
         
         for market in markets_response['markets']:
             if market["yes_ask"] > 90 or market["no_ask"] > 90:
@@ -103,8 +106,11 @@ def get_kalshi_max_day_json(currency, SMA):
                     timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     update_local_csv(timestamp, "BTC", "Daily", "No", mkt["target_price"], mkt["no_prob"], mkt["no_price"])
                     update_local_csv(timestamp, "BTC", "Daily", "Yes", mkt["target_price"], mkt["yes_prob"], mkt["yes_price"])
+                    rowsAppended += 1
 
                 market_data.append(mkt)
+
+        print(f"{rowsAppended} rows appended at time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 
         # Send email if opportunities are found
         if opportunities:
@@ -113,7 +119,7 @@ def get_kalshi_max_day_json(currency, SMA):
             html_content += "<br>".join([f"<p>{opp}</p>" for opp in opportunities])
             try:
                 send_email(html_content)
-                print("Alert email sent successfully")
+                print(f"***Alert email sent successfully at time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ***")
             except Exception as e:
                 print(f"Failed to send alert email: {str(e)}")
                 
