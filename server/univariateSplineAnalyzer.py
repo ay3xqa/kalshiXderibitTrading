@@ -12,7 +12,7 @@ class UnivariateSplineAnalyzer:
 
     def load_data(self):
         # Load data dynamically based on asset and timeline
-        file_name = f'{self.asset}_{self.timeline}_strike_mark_data.json'
+        file_name = f'data/{self.asset}_{self.timeline}_strike_mark_data.json'
         try:
             with open(file_name, 'r') as f:
                 data = json.load(f)
