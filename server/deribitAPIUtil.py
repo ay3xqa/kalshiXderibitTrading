@@ -115,14 +115,11 @@ def get_all_strike_mark_data_threading():
                 executor.submit(process_data, day_exp_date, "BTC", 'data/BTC_day_strike_mark_data.json'),
                 executor.submit(process_data, year_exp_date, "BTC", 'data/BTC_year_strike_mark_data.json'),
             ]
-
             # Ensure all futures complete and capture potential exceptions
             for future in futures:
-                try:
                     future.result()  # Wait for each future to complete
-                except Exception as e:
-                    print("Error during execution: ", str(e))
+                    
         print("Updated strike mark data")
     except Exception as e:
-        print("Error (deribitAPIUtil.py): ", str(e))
+        raise e # need to propogate the error to the cron job
     

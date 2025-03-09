@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from deribitAPIUtil import main_get_strike_and_mark_price, get_all_strike_mark_data_threading
+from deribitAPIUtil import get_all_strike_mark_data_threading
 from kalshiAPIUtil import get_kalshi_max_year_json, get_kalshi_max_day_json
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -26,16 +26,14 @@ def initialize_data():
     global btc_day_analyzer, btc_year_analyzer
 
     # Fetch initial strike mark data
-    get_all_strike_mark_data_threading()
+    get_all_strike_mark_data_threading() # deribit
 
     # Instantiate analyzers
     btc_day_analyzer = UnivariateSplineAnalyzer("BTC", "day")
     btc_year_analyzer = UnivariateSplineAnalyzer("BTC", "year")
 
     # Fetch initial Kalshi data after analyzers are ready
-    fetch_and_save_kalshi_data()
-
-    # send_email("The Arbitrager_9000 is up and running")
+    fetch_and_save_kalshi_data() # kalshi
 
 
 def fetch_and_save_kalshi_data():
@@ -60,22 +58,28 @@ def fetch_and_save_kalshi_data():
             print("No results found.")
         print("Updated Kalshi fetch")
     except Exception as e:
-        print(f"Error fetching data: {e}")
+        print(f"Error fetching kalshi data: {e}")
+
+
+def fetch_deribit_and_kalshi_market_data():
+    """
+    CRON job that runs deribit then kalshi fetches sequentially.
+    If deribit fails, we pause and wait until next cron job to run Kalshi fetch.
+    """
+    try:
+        get_all_strike_mark_data_threading()
+        # Only proceed to Kalshi fetch if Deribit fetch was successful
+        fetch_and_save_kalshi_data()
+    except Exception as e:
+        print(f"Error in combined fetch job: {e}, will try again in 2 minutes")
 
 
 # Initialize the scheduler
 scheduler = BackgroundScheduler()
 
-# Add periodic jobs
-# scheduler.add_job(get_all_strike_mark_data_threading, 'interval', minutes=2)
-# scheduler.add_job(fetch_and_save_kalshi_data, 'interval', minutes=2)
+# Update scheduler jobs
 scheduler.add_job(
-    get_all_strike_mark_data_threading,
-    CronTrigger(minute='*/2', hour='9-16', timezone='US/Eastern')
-)
-
-scheduler.add_job(
-    fetch_and_save_kalshi_data,
+    fetch_deribit_and_kalshi_market_data,
     CronTrigger(minute='*/2', hour='9-16', timezone='US/Eastern')
 )
 

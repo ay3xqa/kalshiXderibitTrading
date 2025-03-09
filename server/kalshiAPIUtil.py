@@ -90,7 +90,6 @@ def get_kalshi_max_day_json(currency, SMA):
                 price_diff_threshold = 10
                 floor_price = 50
 
-                # for now blocking ETH notifications (TODO: fix)
                 if mkt["no_prob"] > mkt["no_price"] + price_diff_threshold and mkt["no_price"] > floor_price and currency == "BTC":
                     opportunities.append(
                         f"Price difference detected for {currency} at ${mkt['target_price']}:\n"
