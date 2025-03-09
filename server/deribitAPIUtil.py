@@ -124,5 +124,5 @@ def get_all_strike_mark_data_threading():
                     print("Error during execution: ", str(e))
         print("Updated strike mark data")
     except Exception as e:
-        print("Error (deribitAPIUtil.py): ", str(e))
+        raise e # need to propogate the error to the cron job
     
