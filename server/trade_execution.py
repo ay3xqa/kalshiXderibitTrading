@@ -2,7 +2,7 @@ import uuid
 from kalshiAuth import retrieve_auth_header
 import requests
 from dotenv import load_dotenv
-import trade_config
+import config.trade_config as trade_config
 
 load_dotenv()
 

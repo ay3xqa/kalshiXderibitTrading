@@ -1,8 +1,9 @@
+import config.aws_email_config as aws_email_config
+import datetime
 from kalshiAuth import retrieve_auth_header
+import requests
 from s3_update_util import update_local_csv
 from trade_execution import check_and_execute_trade
-import requests
-import datetime
 
 method = "GET"
 base_url = 'https://api.elections.kalshi.com'
@@ -114,26 +115,28 @@ def get_kalshi_max_day_json(currency, SMA):
                             'difference': mkt["yes_prob"]-mkt["yes_price"]}
                     check_and_execute_trade(trade)
 
-                if currency == "BTC":
-                    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    update_local_csv(timestamp, "BTC", "Daily", "No", mkt["target_price"], mkt["no_prob"], mkt["no_price"])
-                    update_local_csv(timestamp, "BTC", "Daily", "Yes", mkt["target_price"], mkt["yes_prob"], mkt["yes_price"])
-                    rowsAppended += 1
+                if aws_email_config.ENABLE_S3_OPS:
+                    if currency == "BTC":
+                        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        update_local_csv(timestamp, "BTC", "Daily", "No", mkt["target_price"], mkt["no_prob"], mkt["no_price"])
+                        update_local_csv(timestamp, "BTC", "Daily", "Yes", mkt["target_price"], mkt["yes_prob"], mkt["yes_price"])
+                        rowsAppended += 1
 
                 market_data.append(mkt)
 
         print(f"{rowsAppended} rows appended at time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                
-        # Send email if opportunities are found
-        if opportunities:
-            from sendGrid import send_email
-            html_content = "<h2>Trading OpportunitY Detected:</h2>"
-            html_content += "<br>".join([f"<p>{opp}</p>" for opp in opportunities])
-            try:
-                send_email(html_content)
-                print(f"***Alert email sent successfully at time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ***")
-            except Exception as e:
-                print(f"Failed to send alert email: {str(e)}")
+        
+        if aws_email_config.SEND_EMAILS:
+            # Send email if opportunities are found
+            if opportunities:
+                from sendGrid import send_email
+                html_content = "<h2>Trading OpportunitY Detected:</h2>"
+                html_content += "<br>".join([f"<p>{opp}</p>" for opp in opportunities])
+                try:
+                    send_email(html_content)
+                    print(f"***Alert email sent successfully at time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ***")
+                except Exception as e:
+                    print(f"Failed to send alert email: {str(e)}")
                 
         sorted_market_data = sorted(market_data, key=lambda x: x['target_price'])
         data["market_data"] = sorted_market_data
@@ -141,5 +144,3 @@ def get_kalshi_max_day_json(currency, SMA):
     else:
         print("Error: ", response.status_code, response.text)
         return {}
-
-# add dummy line
