@@ -1,13 +1,15 @@
-from flask import Flask, jsonify
-from deribitAPIUtil import get_all_strike_mark_data_threading
-from kalshiAPIUtil import get_kalshi_max_year_json, get_kalshi_max_day_json
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from univariateSplineAnalyzer import UnivariateSplineAnalyzer
-from flask_cors import CORS
-from s3_update_util import merge_and_upload_to_s3
-import os
+import config.aws_email_config as aws_email_config
+from deribitAPIUtil import get_all_strike_mark_data_threading
 import json
+from kalshiAPIUtil import get_kalshi_max_day_json, get_kalshi_max_year_json
+from flask_cors import CORS
+from flask import Flask, jsonify
+import os
+from s3_update_util import merge_and_upload_to_s3
+from univariateSplineAnalyzer import UnivariateSplineAnalyzer
+
 
 app = Flask(__name__)
 CORS(app)
@@ -70,27 +72,28 @@ def fetch_deribit_and_kalshi_market_data():
     except Exception as e:
         print(f"Error in combined fetch job: {e}, will try again in 2 minutes")
 
+def intialize_cron_jobs():
+    # Initialize the scheduler
+    scheduler = BackgroundScheduler()
 
-# Initialize the scheduler
-scheduler = BackgroundScheduler()
+    # Update scheduler jobs
+    scheduler.add_job(
+        fetch_deribit_and_kalshi_market_data,
+        CronTrigger(minute='*/2', hour='9-16', timezone='US/Eastern')
+    )
 
-# Update scheduler jobs
-scheduler.add_job(
-    fetch_deribit_and_kalshi_market_data,
-    CronTrigger(minute='*/2', hour='9-16', timezone='US/Eastern')
-)
+    if aws_email_config.ENABLE_S3_OPS:
+        # Set up cron job for S3 merging and uploading 
+        cron_trigger = CronTrigger(
+            minute='30',
+            hour='9-16',
+            start_date='2025-01-01 09:30:00',
+            timezone='US/Eastern'
+        )
+        scheduler.add_job(merge_and_upload_to_s3, cron_trigger)
 
-# Set up cron job for S3 merging and uploading
-cron_trigger = CronTrigger(
-    minute='30',
-    hour='9-16',
-    start_date='2025-01-01 09:30:00',
-    timezone='US/Eastern'
-)
-scheduler.add_job(merge_and_upload_to_s3, cron_trigger)
-
-# Start the scheduler
-scheduler.start()
+    # Start the scheduler
+    scheduler.start()
 
 
 @app.route("/")
@@ -115,4 +118,5 @@ def get_all_kalshi_markets_json():
 if __name__ == '__main__':
     # Initialize data before running the app
     initialize_data()
+    intialize_cron_jobs()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5001)), debug=True, use_reloader=False)
