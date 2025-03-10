@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 from deribitAPIUtil import get_all_strike_mark_data_threading
 from kalshiAPIUtil import get_kalshi_max_year_json, get_kalshi_max_day_json
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -6,11 +6,8 @@ from apscheduler.triggers.cron import CronTrigger
 from univariateSplineAnalyzer import UnivariateSplineAnalyzer
 from flask_cors import CORS
 from s3_update_util import merge_and_upload_to_s3
-from sendGrid import send_email
 import os
 import json
-import time
-from threading import Lock
 
 app = Flask(__name__)
 CORS(app)

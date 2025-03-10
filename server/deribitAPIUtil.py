@@ -117,9 +117,7 @@ def get_all_strike_mark_data_threading():
             ]
             # Ensure all futures complete and capture potential exceptions
             for future in futures:
-                    future.result()  # Wait for each future to complete
-                    
+                future.result()  # Wait for each future to complete
         print("Updated strike mark data")
     except Exception as e:
-        raise e # need to propogate the error to the cron job
-    
+        raise e # need to propogate the error to the cron job    

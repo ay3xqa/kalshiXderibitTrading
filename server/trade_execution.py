@@ -1,8 +1,8 @@
-import json
 import uuid
 from kalshiAuth import retrieve_auth_header
 import requests
 from dotenv import load_dotenv
+import trade_config
 
 load_dotenv()
 
@@ -37,14 +37,14 @@ def check_and_execute_trade(trade):
     # Perform portfolio and strategy checks
     print(trade)
     global trades_made_today
-    if trades_made_today >= 2:
+    if trades_made_today >= trade_config.DAILY_MAX_TRADES:
         print("Trade Not Executed - Too many trades made today")
         return 
     balance = get_balance()
     if not balance:
         print("Trade Not Executed - Error Getting Balance")
         return 
-    if balance < 40000: # ADJUSTABLE VALUE
+    if balance < trade_config.MIN_BALANCE_THRESHOLD:
         print("Trade Not Executed - Balance too Low")
         return
     max_allocation = getMaxAllocation(trade)
@@ -65,7 +65,8 @@ def get_positions(ticker):
     print(response.text)
     if response.status_code > 299:
         return None
-    return abs(int(response.json()["market_positions"][0]["position"]))
+    response = response.json()
+    return abs(int(response["market_positions"][0]["position"]))-abs(int(response["market_positions"][0]["resting_orders_count"]))
 
 def create_limit_sell(side, ticker, limit_price):
     execute_trade_method = "POST"
@@ -101,11 +102,8 @@ def getMaxAllocation(trade):
     # Dynamic Allocation
     # response = requests.get(base_url+portfolio_path, headers=portfolio_headers)
     # max_allocation = response.json()["balance"]*0.2
-    
-    # Fixed Unit Size per Trade
-    max_allocation = 3000 # ADJUSTABLE VALUE
 
-    return int(max_allocation//trade["price"])
+    return int(trade_config.TRADE_UNIT_SIZE//trade["price"])
 
 def get_balance():
     try:
