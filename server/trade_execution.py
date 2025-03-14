@@ -3,6 +3,7 @@ from kalshiAuth import retrieve_auth_header
 import requests
 from dotenv import load_dotenv
 import config.trade_config as trade_config
+from sendGrid import send_email
 
 load_dotenv()
 
@@ -51,8 +52,10 @@ def check_and_execute_trade(trade):
     if max_allocation > 0:
         if execute_trade(action="buy", side=trade["trade_type"], count=max_allocation, order_type="market", ticker=trade["event_ticker"]):
             trades_made_today+=1
-            create_limit_sell(side=trade["trade_type"], ticker=trade["event_ticker"], limit_price=int(trade["limit_price"]))
-
+            if not create_limit_sell(side=trade["trade_type"], ticker=trade["event_ticker"], limit_price=int(trade["limit_price"])):
+                html_content = "<h2>Limit sell failed to execute:</h2>"
+                html_content += f"<p>Trade: {trade}</p>"
+                send_email(html_content)
 def get_positions(ticker):
     method_type = "GET"
     base_url = 'https://api.elections.kalshi.com'
@@ -75,7 +78,7 @@ def create_limit_sell(side, ticker, limit_price):
     execute_trade_headers = retrieve_auth_header(path=execute_trade_path, method_type=execute_trade_method)
     current_ticker_position = get_positions(ticker)
     if not current_ticker_position:
-        return
+        return 0
 
     order_id = str(uuid.uuid4())
     payload = {
