@@ -4,6 +4,7 @@ import requests
 from dotenv import load_dotenv
 import config.trade_config as trade_config
 from sendGrid import send_email
+import time
 
 load_dotenv()
 
@@ -52,6 +53,7 @@ def check_and_execute_trade(trade):
     if max_allocation > 0:
         if execute_trade(action="buy", side=trade["trade_type"], count=max_allocation, order_type="market", ticker=trade["event_ticker"]):
             trades_made_today+=1
+            time.sleep(10)  # Wait for 10 seconds (arbitrary)
             if not create_limit_sell(side=trade["trade_type"], ticker=trade["event_ticker"], limit_price=int(trade["limit_price"])):
                 html_content = "<h2>Limit sell failed to execute:</h2>"
                 html_content += f"<p>Trade: {trade}</p>"
