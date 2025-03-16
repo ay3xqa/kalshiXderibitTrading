@@ -130,7 +130,7 @@ def get_kalshi_max_day_json(currency, SMA):
             # Send email if opportunities are found
             if opportunities:
                 from sendGrid import send_email
-                html_content = "<h2>Trading OpportunitY Detected:</h2>"
+                html_content = "<h2>Trading Opportunity Detected:</h2>"
                 html_content += "<br>".join([f"<p>{opp}</p>" for opp in opportunities])
                 try:
                     send_email(html_content)
