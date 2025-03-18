@@ -4,12 +4,16 @@ import requests
 from dotenv import load_dotenv
 import config.trade_config as trade_config
 from sendGrid import send_email
-import time
+from collections import defaultdict
+import datetime
 
 load_dotenv()
 
+global num_trades_made_today
 global trades_made_today
-trades_made_today = 0
+global stop_loss_dict
+trades_made_today = defaultdict(list)
+num_trades_made_today = 0
 
 # Params documentation: https://trading-api.readme.io/reference/createorder
 
@@ -39,7 +43,13 @@ def check_and_execute_trade(trade):
     # Perform portfolio and strategy checks
     print(trade)
     global trades_made_today
-    if trades_made_today >= trade_config.DAILY_MAX_TRADES:
+    global num_trades_made_today
+    now = datetime.datetime.now()
+    trade_cutoff_time = datetime.time(15, 30)  # 3:30 PM
+    if now.time() >= trade_cutoff_time:
+        print("Trade Not Executed - Too close to event deadline")
+        return  
+    if num_trades_made_today >= trade_config.DAILY_MAX_TRADES:
         print("Trade Not Executed - Too many trades made today")
         return 
     balance = get_balance()
@@ -52,8 +62,8 @@ def check_and_execute_trade(trade):
     max_allocation = getMaxAllocation(trade)
     if max_allocation > 0:
         if execute_trade(action="buy", side=trade["trade_type"], count=max_allocation, order_type="market", ticker=trade["event_ticker"]):
-            trades_made_today+=1
-            time.sleep(10)  # Wait for 10 seconds (arbitrary)
+            num_trades_made_today+=1
+            trades_made_today[trade["event_ticker"]].append(trade)
             if not create_limit_sell(side=trade["trade_type"], ticker=trade["event_ticker"], limit_price=int(trade["limit_price"])):
                 html_content = "<h2>Limit sell failed to execute:</h2>"
                 html_content += f"<p>Trade: {trade}</p>"
@@ -123,3 +133,31 @@ def get_balance():
         return balance
     except Exception as e:
         return None
+
+def enforce_stop_loss(kalshi_data, stop_loss_dict):
+    now = datetime.datetime.now()
+    trade_cutoff_time = datetime.time(15, 30)  # 3:30 PM
+    global trades_made_today
+    # Retrieve all current positions
+    method_type = "GET"
+    base_url = 'https://api.elections.kalshi.com'
+    positions_path = '/trade-api/v2/portfolio/positions'
+    positions_headers = retrieve_auth_header(path=positions_path, method_type=method_type)
+    response = requests.get(base_url+positions_path, headers=positions_headers)
+    print(response.text)
+    if response.status_code > 299:
+        return None
+    response = response.json()
+    market_positions = response["market_positions"]
+
+    if now.time() >= trade_cutoff_time:
+        for position in market_positions:
+            ticker = position["ticker"]
+            trade = trades_made_today[ticker][0]
+            if ticker not in kalshi_data:
+                continue
+            if stop_loss_dict[ticker] > kalshi_data[ticker]:
+                if not create_limit_sell(side=trade["trade_type"], ticker=ticker, limit_price=kalshi_data[ticker]-2):
+                    html_content = "<h2>Failed to create stop loss</h2>"
+                    html_content += f"<p>Position: {position}</p>"
+                    send_email(html_content)
