@@ -43,15 +43,15 @@ def fetch_instruments(exp_date, currency):
     }
     response = requests.get(base_url + instrument_endpoint, params=params)
     options = []
-    if response.status_code == 200:
+    if response.status_code > 299:
+        print ("Failed to retrieve data:", response.status_code, response.text)
+        return []
+    else:
         data = response.json()
         for res in data["result"]:
             if f"-{exp_date}" in res["instrument_name"] and res["option_type"] == "call":
                 options.append((res["instrument_name"], res["strike"]))
         return options
-    else:
-        print("Failed to retrieve data:", response.status_code, response.text)
-        return []
 
 # @brief    Helper function to retrieve mark to market price of an instrument and format output
 # @params   instrument: STRING -> i.e "BTC-27DEC24-10000-C"
@@ -92,14 +92,7 @@ def get_all_strike_mark_data_threading():
         #     # Use today's date
         #     day_exp_date = now.strftime("%d%b%y").upper()
 
-        # TODO: toggle the day_exp_date manually based on operating systems. One didn't work for me
-        # mac version:
-        # day_exp_date = (datetime.now() + timedelta(days=1)).strftime("%-d%b%y").upper()
-        # windows apparently needs the lstrip('0')
-        # here's the windows version:
         day_exp_date = (datetime.now() + timedelta(days=1)).strftime("%d%b%y").upper().lstrip('0')
-
-        print(day_exp_date)
         year_exp_date = "26DEC25"
 
         # Define a helper function to handle each call and file writing
@@ -118,6 +111,6 @@ def get_all_strike_mark_data_threading():
             # Ensure all futures complete and capture potential exceptions
             for future in futures:
                 future.result()  # Wait for each future to complete
-        print("Updated strike mark data")
+        print("Deribit market data for " + day_exp_date + " fetched successfully at: ", datetime.now(est).strftime("%Y-%m-%d %H:%M:%S"))
     except Exception as e:
         raise e # need to propogate the error to the cron job    
