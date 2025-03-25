@@ -172,7 +172,7 @@ def get_kalshi_max_day_json(currency, SMA):
     
     # Process each market
     for market in markets_response['markets']:
-        mkt = _process_market_data(market, currency, SMA)
+        mkt = _process_market_data(market, SMA)
         if not mkt:
             continue
             

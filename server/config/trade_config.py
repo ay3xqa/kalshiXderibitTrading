@@ -7,4 +7,4 @@ MIN_BALANCE_THRESHOLD = 3000
 TRADE_UNIT_SIZE = 800
 
 # Maximum number of trades allowed per day
-DAILY_MAX_TRADES = 0
+DAILY_MAX_TRADES = 6
