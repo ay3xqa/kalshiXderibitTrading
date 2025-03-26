@@ -16,20 +16,18 @@ CORS(app)
 
 # Global variables for analyzers
 btc_day_analyzer = None
-btc_year_analyzer = None 
 
 def initialize_data():
     """
     Initializes the strike mark data and analyzers required for further processing.
     """
-    global btc_day_analyzer, btc_year_analyzer
+    global btc_day_analyzer
 
     # Fetch initial strike mark data
     get_all_strike_mark_data_threading() # deribit
 
     # Instantiate analyzers
     btc_day_analyzer = UnivariateSplineAnalyzer("BTC", "day")
-    btc_year_analyzer = UnivariateSplineAnalyzer("BTC", "year")
 
     # Fetch initial Kalshi data after analyzers are ready
     fetch_and_save_kalshi_data() # kalshi
@@ -42,8 +40,7 @@ def fetch_and_save_kalshi_data():
     try:
         # Fetch data using the initialized analyzers
         btc_max_day = get_kalshi_max_day_json("BTC", btc_day_analyzer)
-        btc_max_year = get_kalshi_max_year_json("BTC", btc_year_analyzer)
-        results = [btc_max_day, btc_max_year]
+        results = [btc_max_day]
 
         # Save results to a JSON file
         if results:
@@ -52,7 +49,6 @@ def fetch_and_save_kalshi_data():
 
             # Refresh analyzer data
             btc_day_analyzer.refresh_data()
-            btc_year_analyzer.refresh_data()
         else:
             print("No results found.")
         print("Updated Kalshi fetch")
