@@ -93,7 +93,6 @@ def get_all_strike_mark_data_threading():
         #     day_exp_date = now.strftime("%d%b%y").upper()
 
         day_exp_date = (datetime.now() + timedelta(days=1)).strftime("%d%b%y").upper().lstrip('0')
-        year_exp_date = "26DEC25"
 
         # Define a helper function to handle each call and file writing
         def process_data(exp_date, currency, filename):
@@ -101,16 +100,8 @@ def get_all_strike_mark_data_threading():
             with open(filename, 'w') as f:
                 json.dump({"data": data}, f, indent=4)
 
-        # Create tasks for the executor
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            # Dispatch parallel tasks for each currency and expiration date
-            futures = [
-                executor.submit(process_data, day_exp_date, "BTC", 'data/BTC_day_strike_mark_data.json'),
-                executor.submit(process_data, year_exp_date, "BTC", 'data/BTC_year_strike_mark_data.json'),
-            ]
-            # Ensure all futures complete and capture potential exceptions
-            for future in futures:
-                future.result()  # Wait for each future to complete
+        # Process the data directly since we only have one task
+        process_data(day_exp_date, "BTC", 'data/BTC_day_strike_mark_data.json')
         print("Deribit market data for " + day_exp_date + " fetched successfully at: ", datetime.now(est).strftime("%Y-%m-%d %H:%M:%S"))
     except Exception as e:
         raise e # need to propogate the error to the cron job    
