@@ -17,7 +17,10 @@ def get_kalshi_max_year_json(currency, SMA):
     if currency not in valid_currency:
         print("Not valid currency type. Request not made")
         return {}
-    if response.status_code == 200:
+    if response.status_code > 299:
+        print("Error: ", response.status_code, response.text)
+        return {}
+    else:
         markets_response = response.json()
         data = {}
         if markets_response['markets'][0]:
@@ -26,7 +29,6 @@ def get_kalshi_max_year_json(currency, SMA):
         for market in markets_response['markets']:
             if market["status"] == "active":
                 mkt = {}
-                last_dash_index = market["ticker"].rfind('-')
                 target_price = int(market["floor_strike"]+0.01)
                 mkt["event_ticker"] = market["ticker"]
                 mkt["target_price"] = int(target_price)
@@ -38,9 +40,6 @@ def get_kalshi_max_year_json(currency, SMA):
         sorted_market_data = sorted(market_data, key=lambda x: x['target_price'])
         data["market_data"] = sorted_market_data
         return data
-    else:
-        print("Error: ", response.status_code, response.text)
-        return {}
 
 def _get_formatted_date():
     """Helper function to get the formatted date string for daily markets."""
@@ -55,25 +54,24 @@ def _get_formatted_date():
 
 def _fetch_daily_market_data(currency):
     """Fetch raw market data from Kalshi API for daily markets."""
-    formatted_date = _get_formatted_date()
+    today_formatted_date = _get_formatted_date()
     
-    print(f"KX{currency}D-{formatted_date}17")
-    market_params = {'event_ticker':f"KX{currency}D-{formatted_date}17"}
+    market_params = {'event_ticker':f"KX{currency}D-{today_formatted_date}17"}
     headers = retrieve_auth_header(path=path, method_type=method)
     response = requests.get(base_url+path, headers=headers, params=market_params)
     
-    valid_currency = {"BTC", "ETH"}
-    if currency not in valid_currency:
+    if currency != "BTC":
         print("Not valid currency type. Request not made")
         return None
         
-    if response.status_code == 200:
-        return response.json() # return the whole response
-    else:
+    if response.status_code > 299:
         print("Error: ", response.status_code, response.text)
         return None
+    else:
+        print("Kalshi market data for", today_formatted_date, "for", f"KX{currency}D-{today_formatted_date}17", " fetched successfully at: ", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        return response.json() # return the whole response
 
-def _process_market_data(market, currency, SMA):
+def _process_market_data(market, SMA):
     """Process a single market's data and return market info dictionary."""
     if market["yes_ask"] > 90 or market["no_ask"] > 90:
         return None
@@ -174,7 +172,7 @@ def get_kalshi_max_day_json(currency, SMA):
     
     # Process each market
     for market in markets_response['markets']:
-        mkt = _process_market_data(market, currency, SMA)
+        mkt = _process_market_data(market, SMA)
         if not mkt:
             continue
             
