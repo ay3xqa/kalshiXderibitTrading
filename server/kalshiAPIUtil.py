@@ -60,11 +60,7 @@ def _fetch_daily_market_data(currency):
     """Fetch raw market data from Kalshi API for daily markets."""
     today_formatted_date = _get_formatted_date()
     
-<<<<<<< feature/KAT-11
     market_params = {'event_ticker':f"KX{currency}D-{today_formatted_date}18"}
-=======
-    market_params = {'event_ticker':f"KX{currency}D-{today_formatted_date}17"}
->>>>>>> main
     headers = retrieve_auth_header(path=path, method_type=method)
     response = requests.get(base_url+path, headers=headers, params=market_params)
     
@@ -76,7 +72,6 @@ def _fetch_daily_market_data(currency):
         print("Error: ", response.status_code, response.text)
         return None
     else:
-<<<<<<< feature/KAT-11
         print("Kalshi market data for", today_formatted_date, "for", f"KX{currency}D-{today_formatted_date}18", " fetched successfully at: ", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         return response.json() # return the whole response
 
@@ -152,80 +147,6 @@ def _send_opportunity_email(opportunities):
     if not aws_email_config.SEND_EMAILS or not opportunities:
         return
         
-=======
-        print("Kalshi market data for", today_formatted_date, "for", f"KX{currency}D-{today_formatted_date}17", " fetched successfully at: ", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        return response.json() # return the whole response
-
-def _process_market_data(market, SMA):
-    """Process a single market's data and return market info dictionary."""
-    if market["yes_ask"] > 90 or market["no_ask"] > 90:
-        return None
-        
-    if market["status"] != "active":
-        return None
-        
-    mkt = {}
-    mkt["event_ticker"] = market["ticker"]
-    mkt["target_price"] = int(market["floor_strike"]+0.01)
-    mkt["no_price"] = market["no_ask"]
-    mkt["no_prob"] = SMA.integrate_pdf(mkt["target_price"])
-    mkt["yes_price"] = market["yes_ask"]
-    mkt["yes_prob"] = 100-mkt["no_prob"]
-    
-    return mkt
-
-def _check_trading_opportunities(mkt, currency):
-    """Check if there are trading opportunities and execute trades if found."""
-    opportunities = []
-    price_diff_threshold = 10
-    floor_price = 50
-
-    # Check for NO trade opportunity
-    if mkt["no_prob"] > mkt["no_price"] + price_diff_threshold and mkt["no_price"] > floor_price and currency == "BTC":
-        opportunities.append(
-            f"Price difference detected for {currency} at ${mkt['target_price']}:\n"
-            f"NO Market Price: {mkt['no_price']}% vs Model Probability: {mkt['no_prob']}%"
-        )
-        trade = {'event_ticker': mkt["event_ticker"], 
-                'trade_type': 'no', 
-                'price': mkt['no_price'], 
-                'limit_price': mkt['no_prob'], 
-                'difference': mkt["no_prob"]-mkt["no_price"]}
-        check_and_execute_trade(trade)
-
-    # Check for YES trade opportunity
-    if mkt["yes_prob"] > mkt["yes_price"] + price_diff_threshold and mkt["yes_price"] > floor_price and currency == "BTC":
-        opportunities.append(
-            f"Price difference detected for {currency} at ${mkt['target_price']}:\n"
-            f"YES Market Price: {mkt['yes_price']}% vs Model Probability: {mkt['yes_prob']}%"
-        )
-        trade = {'event_ticker': mkt["event_ticker"], 
-                'trade_type': 'yes', 
-                'price': mkt['yes_price'], 
-                'limit_price': mkt['yes_prob'], 
-                'difference': mkt["yes_prob"]-mkt["yes_price"]}
-        check_and_execute_trade(trade)
-    
-    return opportunities
-
-def _update_csv_data(mkt, currency):
-    """Update local CSV data if enabled."""
-    rows_appended = 0
-    
-    if aws_email_config.ENABLE_S3_OPS and currency == "BTC":
-        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        update_local_csv(timestamp, "BTC", "Daily", "No", mkt["target_price"], mkt["no_prob"], mkt["no_price"])
-        update_local_csv(timestamp, "BTC", "Daily", "Yes", mkt["target_price"], mkt["yes_prob"], mkt["yes_price"])
-        rows_appended = 1
-        
-    return rows_appended
-
-def _send_opportunity_email(opportunities):
-    """Send email alert for trading opportunities if enabled."""
-    if not aws_email_config.SEND_EMAILS or not opportunities:
-        return
-        
->>>>>>> main
     from sendGrid import send_email
     html_content = "<h2>Trading Opportunity Detected:</h2>"
     html_content += "<br>".join([f"<p>{opp}</p>" for opp in opportunities])
@@ -277,12 +198,6 @@ def get_kalshi_max_day_json(currency, SMA):
     if total_rows_appended > 0:
         print(f"{total_rows_appended} rows appended at time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
-<<<<<<< feature/KAT-11
-=======
-    # Send email alerts
-    _send_opportunity_email(all_opportunities)
-    
->>>>>>> main
     # Sort and return market data
     sorted_market_data = sorted(market_data, key=lambda x: x['target_price'])
     data["market_data"] = sorted_market_data
