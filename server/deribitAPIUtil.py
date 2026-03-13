@@ -93,7 +93,13 @@ def get_all_strike_mark_data_threading():
         #     day_exp_date = now.strftime("%d%b%y").upper()
 
         day_exp_date = (datetime.now() + timedelta(days=1)).strftime("%d%b%y").upper().lstrip('0')
+<<<<<<< feature/KAT-11
+
+        print(day_exp_date)
+        year_exp_date = "25DEC26"
+=======
         year_exp_date = "26DEC25"
+>>>>>>> main
 
         # Define a helper function to handle each call and file writing
         def process_data(exp_date, currency, filename):
