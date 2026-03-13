@@ -3,7 +3,6 @@ from kalshiAuth import retrieve_auth_header
 import requests
 from dotenv import load_dotenv
 import config.trade_config as trade_config
-from sendGrid import send_email
 from collections import defaultdict
 import datetime
 
@@ -65,9 +64,7 @@ def check_and_execute_trade(trade):
             num_trades_made_today+=1
             trades_made_today[trade["event_ticker"]].append(trade)
             if not create_limit_sell(side=trade["trade_type"], ticker=trade["event_ticker"], limit_price=int(trade["limit_price"])):
-                html_content = "<h2>Limit sell failed to execute:</h2>"
-                html_content += f"<p>Trade: {trade}</p>"
-                send_email(html_content)
+                print(f"Warning: Limit sell failed to execute for trade: {trade}")
 def get_positions(ticker):
     method_type = "GET"
     base_url = 'https://api.elections.kalshi.com'
@@ -158,6 +155,4 @@ def enforce_stop_loss(kalshi_data, stop_loss_dict):
                 continue
             if stop_loss_dict[ticker] > kalshi_data[ticker]:
                 if not create_limit_sell(side=trade["trade_type"], ticker=ticker, limit_price=kalshi_data[ticker]-2):
-                    html_content = "<h2>Failed to create stop loss</h2>"
-                    html_content += f"<p>Position: {position}</p>"
-                    send_email(html_content)
+                    print(f"Warning: Failed to create stop loss for position: {position}")

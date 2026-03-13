@@ -30,9 +30,9 @@ def get_kalshi_max_year_json(currency, SMA):
                 target_price = int(market["floor_strike"]+0.01)
                 mkt["event_ticker"] = market["ticker"]
                 mkt["target_price"] = int(target_price)
-                mkt["no_price"] = market["no_ask"]
+                mkt["no_price"] = int(float(market["no_ask_dollars"]) * 100)
                 mkt["no_prob"] = SMA.integrate_pdf(mkt["target_price"])
-                mkt["yes_price"] = market["yes_ask"]
+                mkt["yes_price"] = int(float(market["yes_ask_dollars"]) * 100)
                 mkt["yes_prob"] = 100-mkt["no_prob"]
                 market_data.append(mkt)
         sorted_market_data = sorted(market_data, key=lambda x: x['target_price'])
@@ -43,17 +43,31 @@ def get_kalshi_max_year_json(currency, SMA):
         return {}
 
 def get_kalshi_max_day_json(currency, SMA):
-    today = datetime.datetime.now()
+    # today = datetime.datetime.now()
     
-    # Extract components for the format
-    year_last_two = today.strftime('%y')
-    month_abbr = today.strftime('%b').upper()
-    day = today.strftime('%d')
+    # # Extract components for the format
+    # year_last_two = today.strftime('%y')
+    # month_abbr = today.strftime('%b').upper()
+    # day = today.strftime('%d')
     
-    formatted_date = f"{year_last_two}{month_abbr}{day}"
+    # formatted_date = f"{year_last_two}{month_abbr}{day}"
 
-    print(f"KX{currency}D-{formatted_date}17")
-    market_params = {'event_ticker':f"KX{currency}D-{formatted_date}17"}
+    # print(f"KX{currency}D-{formatted_date}17")
+    # market_params = {'event_ticker':f"KX{currency}D-{formatted_date}17"}
+    
+    now = datetime.datetime.now()
+    if now.hour >= 18:  
+        event_date = now + datetime.timedelta(days=1) 
+    else:
+        event_date = now 
+    year_last_two = event_date.strftime('%y')
+    month_abbr = event_date.strftime('%b').upper()
+    day = event_date.strftime('%d')
+    formatted_date = f"{year_last_two}{month_abbr}{day}"
+    event_ticker = f"KX{currency}D-{formatted_date}18"
+    print(event_ticker)
+    market_params = {'event_ticker': event_ticker}
+
     headers = retrieve_auth_header(path=path, method_type=method)
     response = requests.get(base_url+path, headers=headers, params=market_params)
     valid_currency = {"BTC", "ETH"}
@@ -62,6 +76,7 @@ def get_kalshi_max_day_json(currency, SMA):
         return {}
     if response.status_code == 200:
         markets_response = response.json()
+        print(markets_response)
         data = {}
         if markets_response['markets'][0]:
             data["market_title"] = markets_response['markets'][0]["title"]
@@ -74,15 +89,15 @@ def get_kalshi_max_day_json(currency, SMA):
         rowsAppended = 0
         
         for market in markets_response['markets']:
-            if market["yes_ask"] > 90 or market["no_ask"] > 90:
+            if int(float(market["yes_ask_dollars"]) * 100) > 90 or int(float(market["no_ask_dollars"]) * 100) > 90:
                 continue
             if market["status"] == "active":
                 mkt = {}
                 mkt["event_ticker"] = market["ticker"]
                 mkt["target_price"] = int(market["floor_strike"]+0.01)
-                mkt["no_price"] = market["no_ask"]
+                mkt["no_price"] = int(float(market["no_ask_dollars"]) * 100)
                 mkt["no_prob"] = SMA.integrate_pdf(mkt["target_price"])
-                mkt["yes_price"] = market["yes_ask"]
+                mkt["yes_price"] = int(float(market["yes_ask_dollars"]) * 100)
                 mkt["yes_prob"] = 100-mkt["no_prob"]
 
 
@@ -125,19 +140,7 @@ def get_kalshi_max_day_json(currency, SMA):
                 market_data.append(mkt)
 
         print(f"{rowsAppended} rows appended at time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        
-        if aws_email_config.SEND_EMAILS:
-            # Send email if opportunities are found
-            if opportunities:
-                from sendGrid import send_email
-                html_content = "<h2>Trading Opportunity Detected:</h2>"
-                html_content += "<br>".join([f"<p>{opp}</p>" for opp in opportunities])
-                try:
-                    send_email(html_content)
-                    print(f"***Alert email sent successfully at time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ***")
-                except Exception as e:
-                    print(f"Failed to send alert email: {str(e)}")
-                
+
         sorted_market_data = sorted(market_data, key=lambda x: x['target_price'])
         data["market_data"] = sorted_market_data
         return data

@@ -79,14 +79,14 @@ def intialize_cron_jobs():
     # Update scheduler jobs
     scheduler.add_job(
         fetch_deribit_and_kalshi_market_data,
-        CronTrigger(minute='*/2', hour='9-16', timezone='US/Eastern')
+        CronTrigger(minute='*/2', hour='0-23', timezone='US/Eastern')
     )
 
     if aws_email_config.ENABLE_S3_OPS:
         # Set up cron job for S3 merging and uploading 
         cron_trigger = CronTrigger(
             minute='30',
-            hour='9-16',
+            hour='0-23',
             start_date='2025-01-01 09:30:00',
             timezone='US/Eastern'
         )
