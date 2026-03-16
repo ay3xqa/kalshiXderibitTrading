@@ -44,7 +44,7 @@ def get_kalshi_max_year_json(currency, SMA):
 def _get_formatted_date():
     """Helper function to get the formatted date string for daily markets."""
     today = datetime.datetime.now()
-    if today.hour >= 18:  
+    if today.hour >= 17:  
         event_date = today + datetime.timedelta(days=1) 
     else:
         event_date = today 
@@ -60,7 +60,7 @@ def _fetch_daily_market_data(currency):
     """Fetch raw market data from Kalshi API for daily markets."""
     today_formatted_date = _get_formatted_date()
     
-    market_params = {'event_ticker':f"KX{currency}D-{today_formatted_date}18"}
+    market_params = {'event_ticker':f"KX{currency}D-{today_formatted_date}17"}
     headers = retrieve_auth_header(path=path, method_type=method)
     response = requests.get(base_url+path, headers=headers, params=market_params)
     
@@ -72,7 +72,7 @@ def _fetch_daily_market_data(currency):
         print("Error: ", response.status_code, response.text)
         return None
     else:
-        print("Kalshi market data for", today_formatted_date, "for", f"KX{currency}D-{today_formatted_date}18", " fetched successfully at: ", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        print("Kalshi market data for", today_formatted_date, "for", f"KX{currency}D-{today_formatted_date}17", " fetched successfully at: ", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         return response.json() # return the whole response
 
 def _process_market_data(market, SMA):

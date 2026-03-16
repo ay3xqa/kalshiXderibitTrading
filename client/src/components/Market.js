@@ -1,44 +1,54 @@
-import React, {useState} from 'react';
-import EventContainer from './Event.js';
-// import mockData from "../mock-kalshi-data.json";
-import "../CSS/Market.css";
+import React, { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
+import Event from './Event';
 
-export default function Market({kalshiData}) {
-    const [isExpanded, setIsExpanded] = useState(true);
-    // Toggle function to expand/collapse the market
-    const toggleMarket = () => {
-        setIsExpanded(!isExpanded);
-    };
+export default function Market({ kalshiData }) {
+  const [isExpanded, setIsExpanded] = useState(true);
 
-    const events = kalshiData["market_data"].map((event, index) => {
-        return (
-            <EventContainer
-                key = {index}
-                yes_price = {event.yes_price}
-                no_price = {event.no_price}
-                target_price = {event.target_price}
-                yes_prob = {event.yes_prob}
-                no_prob = {event.no_prob}
-            />
-        );
-    });
-    return (
-        <div className="market-container">
-        <div className="market-title" onClick={toggleMarket}>
-            {kalshiData["market_title"]}
-            <span className="toggle-icon">{isExpanded ? "▼" : "►"}</span>
+  const toggleMarket = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const events = kalshiData.market_data || [];
+
+  return (
+    <div className={`market-card ${isExpanded ? 'market-card--expanded' : ''}`}>
+      <div className="market-card__header" onClick={toggleMarket}>
+        <div className="market-card__info">
+          <div className="market-card__icon">BTC</div>
+          <span className="market-card__title">{kalshiData.market_title}</span>
         </div>
-        {isExpanded && (
-            <div className="event-list">
-                {kalshiData.market_data.length > 0 ? (
-                    events
-                ) : (
-                    <div className="no-events-message">
-                        No events available for this market.
-                    </div>
-                )}
+        <div className="market-card__toggle">
+          <ChevronDown size={20} />
+        </div>
+      </div>
+
+      <div className="market-card__body">
+        <div className="market-card__columns">
+          <span>Target</span>
+          <span>YES</span>
+          <span>NO</span>
+          <span>Signal</span>
+        </div>
+        <div className="market-card__events">
+          {events.length > 0 ? (
+            events.map((event, index) => (
+              <Event
+                key={index}
+                yes_price={event.yes_price}
+                no_price={event.no_price}
+                target_price={event.target_price}
+                yes_prob={event.yes_prob}
+                no_prob={event.no_prob}
+              />
+            ))
+          ) : (
+            <div className="market-card__empty">
+              No events available for this market.
             </div>
-        )}
+          )}
+        </div>
+      </div>
     </div>
-    )
+  );
 }
