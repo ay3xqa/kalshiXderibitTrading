@@ -71,3 +71,6 @@ Kalshi API → Market Prices ─────────────────
 - Threading: Deribit API calls use ThreadPoolExecutor
 - CORS enabled for frontend-backend communication
 - No test framework currently configured
+
+## Development Guidelines
+- NEVER read any .key files

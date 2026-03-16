@@ -99,6 +99,9 @@ ETH_year_strike_mark_data.json
 kalshi_all_btc_markets_data.json
 kalshi-hourly-data.csv
 kalshi-hourly-data-generic.csv
+kalshi-historical.csv
+backtest_summary.txt
+backtest_results.csv
 
 data/
 
